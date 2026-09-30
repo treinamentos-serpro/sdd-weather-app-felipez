@@ -151,3 +151,29 @@ Os riscos de maior atenção são aqueles ligados à dependência externa de dad
 ## Como as personas influenciam o produto
 
 Esses perfis sugerem que a aplicação precisa equilibrar simplicidade e profundidade: a experiência em mobile deve priorizar velocidade e clareza, enquanto em desktop pode haver maior espaço para análise de previsão e dados complementares. A combinação de uso casual e uso planejado reforça a importância de uma interface intuitiva, previsibilidade e boa legibilidade dos dados meteorológicos.
+
+## Decisões
+
+### 1. Fonte de dados: Open-Meteo (sem API key)
+- Justificativa: a Open-Meteo oferece dados meteorológicos e geocodificação de forma gratuita, sem necessidade de autenticação e sem cobrança por chave de API.
+- O que resolve: elimina a incerteza sobre a fonte de dados, reduz complexidade operacional e resolve a pergunta sobre disponibilidade de uma base confiável de clima.
+
+### 2. "5 dias" = hoje + 4 dias
+- Justificativa: o briefing menciona previsão de 5 dias, e a interpretação mais direta e consistente para uso prático é considerar o período atual mais quatro dias seguintes.
+- O que resolve: remove ambiguidades sobre a janela temporal da previsão e define claramente o escopo do que será exibido ao usuário.
+
+### 3. Unidade padrão: Celsius
+- Justificativa: Celsius é a unidade mais familiar para a maioria dos usuários do público brasileiro e é a opção padrão de uso em contextos de previsão do tempo domésticos.
+- O que resolve: define a base inicial da interface e evita conflito em relação à escala de temperatura antes da conversão manual para Fahrenheit.
+
+### 4. Sem autenticação e sem persistência de servidor
+- Justificativa: como o produto é uma aplicação funcional simples de consulta meteorológica, a ausência de autenticação e persistência no servidor reduz custo, complexidade e acelera a entrega inicial.
+- O que resolve: responde à questão de escopo e arquitetura, evitando decisões de backend, conta de usuário e armazenamento persistente que não são necessárias para o MVP.
+
+### 5. Idioma da UI: pt-BR
+- Justificativa: o contexto do projeto e do público-alvo indicam uso em português brasileiro, o que melhora clareza, fluidez e familiaridade na experiência do usuário.
+- O que resolve: define a língua da interface e elimina ambiguidades sobre localização, rótulos, mensagens e conteúdos de ajuda na aplicação.
+
+## Impacto das decisões sobre o discovery
+
+Essas escolhas fecham pontos críticos que, sem resposta, poderiam gerar retrabalho e atrasos. Com elas, a equipe passa a ter uma base mais objetiva para arquitetura, UX e implementação, especialmente em relação a integração com dados externos, escopo temporal, conversão de temperatura e experiência em português.
