@@ -130,3 +130,24 @@ O briefing descreve uma solução funcional mínima, mas não define a base de d
 ## Observação
 
 Os riscos de maior atenção são aqueles ligados à dependência externa de dados meteorológicos, experiência mobile e clareza de escopo. Esses três fatores impactam diretamente a confiabilidade, a percepção de valor e a capacidade de entregar um produto útil em produção.
+
+## Personas
+
+### 1. Maria, 29 anos — Usuária casual em trânsito
+- Objetivo principal: verificar rapidamente as condições climáticas antes de sair de casa ou escolher o que vestir.
+- Contexto de uso: mobile, em deslocamento, em poucos segundos, com necessidade de informação imediata e legível.
+- Métrica de sucesso: tempo médio para encontrar a previsão da cidade desejada e voltar à rotina sem fricção; alta taxa de uso recorrente em dias com mudança brusca de clima.
+
+### 2. Lucas, 35 anos — Usuário prático com rotina de viagem
+- Objetivo principal: consultar a previsão de destino e planejar compromissos, deslocamentos e itens a levar.
+- Contexto de uso: mobile e desktop, dependendo do momento; usa o app com frequência antes de viajar ou durante deslocamentos.
+- Métrica de sucesso: número de consultas por semana, retenção de uso em viagens e taxa de satisfação ao comparar o clima em diferentes cidades.
+
+### 3. Ana, 42 anos — Usuária orientada a planejamento
+- Objetivo principal: acompanhar a previsão de 5 dias para planejar trabalho, atividades externas e rotina da família.
+- Contexto de uso: desktop em casa e mobile em consultas rápidas fora de casa.
+- Métrica de sucesso: recorrência de uso ao longo da semana, uso de previsão de 5 dias e percepção de utilidade na organização diária.
+
+## Como as personas influenciam o produto
+
+Esses perfis sugerem que a aplicação precisa equilibrar simplicidade e profundidade: a experiência em mobile deve priorizar velocidade e clareza, enquanto em desktop pode haver maior espaço para análise de previsão e dados complementares. A combinação de uso casual e uso planejado reforça a importância de uma interface intuitiva, previsibilidade e boa legibilidade dos dados meteorológicos.
