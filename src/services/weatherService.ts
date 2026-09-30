@@ -121,7 +121,7 @@ function hasFiveDates(values: Array<string | null> | undefined): values is strin
   );
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
+function isObject(value: unknown): value is object {
   return typeof value === 'object' && value !== null;
 }
 
