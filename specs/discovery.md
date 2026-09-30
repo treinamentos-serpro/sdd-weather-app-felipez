@@ -109,3 +109,24 @@ O briefing descreve uma solução funcional mínima, mas não define a base de d
 - Frustração do usuário por ausência de dados esperados ou má qualidade de UX.
 - Dependência excessiva de API externa sem estratégia de fallback.
 - Baixa adoção por não atender necessidades reais de contexto de uso e mobilidade.
+
+## Principais Riscos Técnicos e de Produto
+
+| Risco | Probabilidade | Impacto | Estratégia de mitigação |
+| --- | --- | --- | --- |
+| Dependência de API externa instável | Alta | Alto | Validar a API antes da implementação, definir fallback para erro de rede e exibir estados de carregamento/erro claros. |
+| Latência alta em redes móveis | Alta | Médio | Priorizar interface mobile-first, reduzir payloads, usar cache para dados frequentes e otimizar chamadas. |
+| Ambiguidade de cidades e locais | Média | Médio | Implementar busca com resultados sugeridos, exibir opções quando houver múltiplos matches e validar regras de geocodificação. |
+| Dados meteorológicos inconsistentes ou incompletos | Média | Alto | Definir contrato de dados, validar respostas da API, criar tratamento para campos ausentes e manter mensagens de erro amigáveis. |
+| UX frágil em dispositivos pequenos | Média | Alto | Testar em múltiplas resoluções e navegadores, usar design responsivo, priorizar legibilidade e interação touch-friendly. |
+| Falta de acessibilidade | Média | Médio | Seguir diretrizes de acessibilidade, validar contraste, foco visual, navegação por teclado e semântica dos elementos. |
+| Escopo mal definido e mudanças frequentes | Alta | Alto | Documentar requisitos, validar hipóteses com stakeholders e transformar dúvidas em critérios de aceite antes do desenvolvimento. |
+| Baixa adoção do produto por não resolver problema real | Média | Alto | Validar com usuários, medir engajamento e retenção, e priorizar funcionalidades com maior valor percebido. |
+| Falha na gestão de erro e fallback | Média | Alto | Criar estados de erro consistentes, fallback visual e recuperação automática quando a API responder novamente. |
+| Privacidade e uso de localização | Baixa | Alto | Solicitar consentimento explícito, limitar coleta e documentar claramente uso dos dados de localização. |
+| Requisições excessivas e custo operacional | Média | Médio | Implementar cache, evitar chamadas redundantes e otimizar frequência de atualização dos dados. |
+| Dificuldade de manutenção do código e evolução do produto | Média | Médio | Estruturar arquitetura com separação clara de responsabilidades, componentes reutilizáveis e testes automatizados. |
+
+## Observação
+
+Os riscos de maior atenção são aqueles ligados à dependência externa de dados meteorológicos, experiência mobile e clareza de escopo. Esses três fatores impactam diretamente a confiabilidade, a percepção de valor e a capacidade de entregar um produto útil em produção.
