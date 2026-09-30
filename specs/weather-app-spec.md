@@ -12,42 +12,47 @@ O objetivo do produto é permitir que o usuário responda rapidamente a pergunta
 - O sistema deve permitir que o usuário insira o nome de uma cidade e execute a busca.
 - O sistema deve retornar resultados relevantes ou uma mensagem clara quando a cidade não for encontrada.
 - Critérios de aceitação:
-  - Dado um nome de cidade válido, quando o usuário submeter a busca, então o sistema deve exibir o resultado correspondente ou a cidade selecionada.
-  - Dado um nome de cidade inexistente, quando o usuário submeter a busca, então o sistema deve mostrar uma mensagem clara de “sem resultados”.
+  - Given um campo de busca preenchido com um nome de cidade válido, when o usuário pressionar Enter ou clicar em Buscar, then a requisição deve ser enviada e o sistema deve mostrar o estado de carregamento.
+  - Given o retorno da busca conter uma cidade válida, when a resposta for recebida com sucesso, then o sistema deve renderizar o clima da cidade selecionada.
+  - Given a busca retornando nenhum resultado, when a resposta vier vazia, then o sistema deve exibir uma mensagem de “Nenhuma cidade encontrada” e manter a interface estável.
 
 ### 2. Display current weather
 - O sistema deve exibir o clima atual da cidade selecionada.
 - A tela deve incluir, no mínimo, a temperatura atual e a condição climática.
 - Critérios de aceitação:
-  - Dado uma cidade válida, quando os dados forem carregados com sucesso, então o sistema deve mostrar a temperatura atual e a condição do clima.
-  - Dado uma resposta incompleta da API, quando campos obrigatórios estiverem ausentes, então o sistema deve exibir um estado alternativo em vez de uma tela quebrada.
+  - Given a cidade válida e dados atuais disponíveis, when a resposta de clima atual for recebida, then o sistema deve exibir a temperatura atual e a descrição do clima.
+  - Given um campo de temperatura ausente na resposta, when o dado obrigatório não estiver presente, then o sistema deve exibir um estado de erro específico para dado incompleto em vez de um valor vazio ou quebrado.
+  - Given a busca concluída com sucesso, when o clima atual for exibido, then a área de clima atual deve conter pelo menos um valor numérico de temperatura e uma descrição textual do estado do tempo.
 
 ### 3. Display 5-day forecast
 - O sistema deve mostrar a previsão para os próximos 5 dias, definido como hoje + 4 dias seguintes.
 - A previsão deve ser apresentada de forma legível e de fácil leitura em telas pequenas.
 - Critérios de aceitação:
-  - Dado uma cidade válida, quando os dados de previsão estiverem disponíveis, então o sistema deve exibir 5 entradas diárias de previsão.
-  - Dado que a busca de previsão falhar, quando a API não responder, então o sistema deve mostrar uma mensagem de erro amigável.
+  - Given uma cidade válida, when os dados de previsão forem recebidos com sucesso, then o sistema deve mostrar exatamente 5 entradas de previsão para os próximos 5 dias.
+  - Given uma resposta de previsão contendo dados para mais de 5 dias, when os dados forem processados, then o sistema deve limitar a exibição aos 5 dias previstos pelo escopo do produto.
+  - Given a falha na chamada de previsão, when a resposta retornar erro ou timeout, then o sistema deve exibir uma mensagem de erro amigável sem deixar a tela vazia.
 
 ### 4. Toggle temperature unit
 - O usuário deve poder alternar entre Celsius e Fahrenheit.
 - A troca de unidade deve refletir imediatamente nos valores exibidos da temperatura.
 - Critérios de aceitação:
-  - Dado que o sistema esteja em Celsius, quando o usuário selecionar Fahrenheit, então as temperaturas exibidas devem mudar para a unidade selecionada.
-  - Dado que o usuário alterar a unidade múltiplas vezes, quando a tela for renderizada novamente, então os valores permanecerão consistentes com a unidade ativa.
+  - Given o app carregado em Celsius, when o usuário selecionar Fahrenheit, then todas as temperaturas exibidas na tela devem ser convertidas para Fahrenheit.
+  - Given o app carregado em Fahrenheit, when o usuário selecionar Celsius, then todas as temperaturas exibidas na tela devem ser convertidas para Celsius.
+  - Given a conversão de unidade acionada, when a nova temperatura for calculada, then o valor exibido deve refletir a unidade ativa e manter consistência visual durante a troca.
 
 ### 5. Loading, empty and error states
 - O sistema deve informar ao usuário quando a busca está em andamento, quando não há resultados e quando a requisição falhou.
 - Critérios de aceitação:
-  - Dado que a aplicação está carregando dados, então deve haver um indicador de carregamento visível.
-  - Dado que a busca não retornar resultados, então o sistema deve exibir uma mensagem de estado vazio clara.
-  - Dado que a requisição falhar, então o sistema deve mostrar uma mensagem de erro compreensível e evitar tela em branco.
+  - Given uma busca iniciada, when a requisição estiver em andamento, then o sistema deve mostrar um indicador visual de carregamento.
+  - Given uma busca sem resultado, when a resposta for recebida vazia, then o sistema deve mostrar um estado vazio com mensagem textual clara.
+  - Given uma requisição com falha, when a erro ocorrer, then o sistema deve mostrar uma mensagem de erro explicativa e manter a interface disponível para nova tentativa.
 
 ### 6. Support mobile usage
 - A interface deve ser utilizável em dispositivos móveis e adaptar-se a telas menores.
 - Critérios de aceitação:
-  - Dado um viewport mobile, quando a aplicação for carregada, então a interface deve permanecer legível e sem overflow horizontal.
-  - Dado um usuário em smartphone, quando realizar a busca e consultar a previsão, então as ações primárias devem permanecer acessíveis sem zoom manual.
+  - Given uma viewport mobile com largura reduzida, when a página for carregada, then o conteúdo deve permanecer legível sem overflow horizontal.
+  - Given uma tela em dispositivo móvel, when o usuário interagir com busca e previsão, then os principais elementos devem permanecer acessíveis sem zoom manual.
+  - Given o usuário em smartphone, when a ação primária for tocada, then o alvo de toque deve ser suficientemente grande para uso confortável.
 
 ## User Stories
 
