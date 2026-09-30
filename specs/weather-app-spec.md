@@ -120,29 +120,32 @@ O objetivo do produto é permitir que o usuário responda rapidamente a pergunta
 
 ## Edge Cases
 
-1. Busca vazia
-- O sistema deve impedir envio com campo vazio e mostrar validação adequada ou manter foco no campo.
+1. Cidade inexistente
+- Dado que o nome informado não corresponde a uma cidade válida, quando o usuário submeter a busca e o geocoding não encontrar correspondência, então o sistema deve exibir “Nenhuma cidade encontrada”, não apresentar dados de uma busca anterior como resultado atual e permitir uma nova tentativa.
 
-2. Busca com espaços em branco
-- O sistema deve limpar a entrada antes de processar a consulta e rejeitar buscas vazias.
+2. Input vazio ou composto apenas por espaços
+- Dado que o campo esteja vazio ou contenha apenas espaços em branco, quando o usuário tentar buscar, então o sistema deve impedir o envio da requisição, exibir uma validação orientando a informar uma cidade e manter o campo disponível para correção.
 
-3. Cidade inexistente
-- O sistema deve apresentar uma mensagem de “cidade não encontrada” de forma clara.
+3. Caracteres especiais
+- Dado que o nome da cidade contenha acentos, cedilha, hífen ou apóstrofo, quando o usuário buscar, então o sistema deve preservar esses caracteres e enviar a consulta corretamente codificada.
+- Dado que a entrada contenha apenas caracteres inválidos ou de controle, quando o usuário tentar buscar, então o sistema deve rejeitar a entrada com uma mensagem de validação, sem enviar a requisição nem quebrar a interface.
 
-4. Timeout da API
-- O sistema deve manter o estado de carregamento e, se a resposta demorar demais, mostrar erro de timeout.
+4. Falha de API ou de conectividade
+- Dado que uma requisição falhe por erro HTTP, resposta inválida ou falta de conexão, quando o sistema tentar carregar geocoding ou dados meteorológicos, então deve exibir uma mensagem de erro compreensível, encerrar o estado de carregamento e manter disponível uma nova tentativa.
+- Uma falha técnica não deve ser apresentada como “cidade não encontrada”.
 
-5. Resposta parcial da API
-- Se alguns campos da resposta vierem vazios, o sistema deve mostrar o que for possível e tratar os campos ausentes com segurança.
+5. Timeout
+- Dado que a requisição exceda o limite de tempo configurado, quando o prazo for atingido, então o sistema deve encerrar a tentativa, remover o indicador de carregamento e informar que a consulta demorou demais, oferecendo nova tentativa sem travar a interface.
 
-6. Sem conexão de internet
-- O sistema deve informar o usuário sobre a indisponibilidade de dados por falha de conectividade.
+6. Geocoding sem resultados
+- Dado que o serviço de geocoding responda com sucesso, mas sem localidades correspondentes, quando a resposta for processada, então o sistema deve exibir “Nenhuma cidade encontrada” como estado vazio, sem tratar a resposta como falha de API e sem solicitar a previsão do tempo.
 
-7. Entrada inválida
-- O sistema deve tratar caracteres inesperados ou buscas malformadas sem quebrar a interface.
+7. Resposta parcial
+- Dado que a resposta meteorológica esteja incompleta, quando houver campos ausentes, então o sistema deve exibir os campos válidos e identificar os indisponíveis sem inventar valores ou renderizar conteúdo quebrado.
+- Se faltar um dado obrigatório para o clima atual, o sistema deve indicar que o clima atual está indisponível. Se faltarem dias da previsão, deve exibir os dias disponíveis e indicar os demais como indisponíveis, sem completar dados por suposição.
 
 8. Troca de unidade durante carregamento
-- Se o usuário trocar de unidade enquanto a resposta está sendo carregada, o sistema deve preservar consistência ao renderizar os dados finais.
+- Se o usuário trocar de unidade enquanto a resposta estiver sendo carregada, o sistema deve preservar a unidade selecionada e apresentar todos os valores recebidos nessa unidade quando a renderização terminar.
 
 ## Assumptions
 
