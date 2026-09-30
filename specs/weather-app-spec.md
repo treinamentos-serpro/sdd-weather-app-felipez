@@ -165,7 +165,10 @@ Os critérios de aceite canônicos estão nos requisitos funcionais e em Edge Ca
 
 ## Out of Scope
 
-1. Cadastro, autenticação, favoritos, histórico e persistência de consultas ou preferências.
-2. Geolocalização automática, pontos de interesse, bairros e busca por aeroportos.
-3. Alertas, notificações push, dados históricos, mapas, radar e comparação de localidades.
-4. Funcionamento offline, atualização automática e idiomas diferentes de pt-BR.
+1. Cadastro, autenticação, favoritos, histórico, persistência de consultas ou preferências e sincronização entre dispositivos.
+2. Geolocalização automática, pontos de interesse, bairros e busca por aeroportos; a localidade é informada e selecionada manualmente.
+3. Previsão horária, previsões além das cinco datas definidas e probabilidade de precipitação.
+4. Métricas além de temperatura e condição: sensação térmica, umidade, vento, índice UV, nascer/pôr do sol, qualidade do ar e pólen.
+5. Alertas, notificações push, dados históricos, mapas, radar e comparação simultânea de localidades.
+6. Funcionamento offline, atualização automática e idiomas diferentes de pt-BR.
+7. Backend próprio, proxy de API ou fontes meteorológicas além da Open-Meteo.
