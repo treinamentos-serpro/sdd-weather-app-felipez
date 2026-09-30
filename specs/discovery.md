@@ -6,6 +6,14 @@ O briefing define um produto de previsão do tempo com funcionalidades básicas 
 
 Como PM cético, a principal preocupação é que o produto possa ser entregue com uma visão rasa demais para sustentar decisões técnicas e de experiência. Sem resposta para várias premissas, a equipe corre o risco de construir a solução certa para um problema equivocado.
 
+## Resumo Executivo
+
+1. O produto proposto é uma aplicação simples de previsão do tempo para consulta rápida de cidades, clima atual e previsão de 5 dias.
+2. O principal desafio é transformar um briefing funcional mínimo em uma solução útil, clara e confiável para uso em mobile.
+3. A maior parte do risco está na definição do escopo, na qualidade dos dados meteorológicos e na experiência do usuário em cenários reais de uso.
+4. A solução deve priorizar rapidez, legibilidade, responsividade e tratamento de falhas para manter confiança e retenção.
+5. Antes de iniciar a especificação, é preciso fechar decisões sobre público, dados, UX mobile, acessibilidade e métricas de sucesso.
+
 ## Ambiguidades e Lacunas do Briefing
 
 ### 1. Objetivo de usuário e caso de uso principal
