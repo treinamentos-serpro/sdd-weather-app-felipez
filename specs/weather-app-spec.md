@@ -51,12 +51,16 @@ O objetivo do produto é permitir que o usuário responda rapidamente a pergunta
 
 ## User Stories
 
-1. Como usuário casual, quero buscar uma cidade rapidamente para saber o clima antes de sair de casa.
-2. Como usuário em viagem, quero consultar a previsão dos próximos 5 dias para planejar atividades, roupas e deslocamentos.
-3. Como usuário brasileiro, quero ver a temperatura em Celsius por padrão para entender melhor as condições climáticas.
-4. Como usuário mobile, quero usar a aplicação de forma simples, rápida e legível em um celular.
-5. Como usuário com preferência por outra escala, quero alternar para Fahrenheit para comparar temperaturas da forma que prefiro.
-6. Como usuário em situação de falha de rede, quero receber uma mensagem clara em vez de ver uma tela quebrada ou vazia.
+1. Como Maria, usuária casual em trânsito, quero buscar uma cidade rapidamente para saber se preciso levar guarda-chuva ou uma camada extra antes de sair de casa.
+2. Como Lucas, usuário prático com rotina de viagem, quero consultar a previsão dos próximos 5 dias para planejar deslocamentos, compromissos e itens que devo levar.
+3. Como Ana, usuária orientada a planejamento, quero visualizar a previsão de 5 dias para organizar melhor trabalho, rotina e atividades externas.
+4. Como Maria, usuária casual em trânsito, quero ver o clima atual da cidade selecionada para decidir rapidamente o que vestir no momento.
+5. Como Lucas, usuário prático com rotina de viagem, quero alternar entre Celsius e Fahrenheit para comparar temperaturas conforme minha preferência e contexto de viagem.
+6. Como Ana, usuária orientada a planejamento, quero receber feedback claro em carregamento, erro e ausência de resultados para confiar na aplicação ao consultar a previsão.
+7. Como Maria, usuária casual em trânsito, quero uma interface legível e simples no celular para consultar o clima sem esforço em poucos segundos.
+8. Como Lucas, usuário prático com rotina de viagem, quero que a previsão de 5 dias seja fácil de ler em mobile e desktop para tomar decisões rápidas em diferentes contextos de uso.
+
+> Cada story acima está conectada aos requisitos funcionais de busca, clima atual, previsão de 5 dias, unidade de temperatura e estados de carregamento/erro.
 
 ## Acceptance Criteria
 
