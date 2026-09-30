@@ -85,24 +85,29 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function isValidGeocodingResult(result: GeocodingResult): result is GeocodingResult & {
+function isValidGeocodingResult(result: unknown): result is GeocodingResult & {
   id: number;
   name: string;
   latitude: number;
   longitude: number;
 } {
+  if (typeof result !== 'object' || result === null) {
+    return false;
+  }
+
+  const candidate = result as GeocodingResult;
   return (
-    isFiniteNumber(result.id) &&
-    typeof result.name === 'string' &&
-    result.name.length > 0 &&
-    isFiniteNumber(result.latitude) &&
-    isFiniteNumber(result.longitude)
+    isFiniteNumber(candidate.id) &&
+    typeof candidate.name === 'string' &&
+    candidate.name.length > 0 &&
+    isFiniteNumber(candidate.latitude) &&
+    isFiniteNumber(candidate.longitude)
   );
 }
 
 function hasFiveFiniteNumbers(values: Array<number | null> | undefined): values is number[] {
   return Boolean(
-    values &&
+    Array.isArray(values) &&
       values.length >= 5 &&
       values.slice(0, 5).every((value) => isFiniteNumber(value)),
   );
@@ -110,10 +115,14 @@ function hasFiveFiniteNumbers(values: Array<number | null> | undefined): values 
 
 function hasFiveDates(values: Array<string | null> | undefined): values is string[] {
   return Boolean(
-    values &&
+    Array.isArray(values) &&
       values.length >= 5 &&
       values.slice(0, 5).every((value) => typeof value === 'string' && !Number.isNaN(Date.parse(value))),
   );
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 export async function searchCities(name: string): Promise<City[]> {
@@ -132,6 +141,10 @@ export async function searchCities(name: string): Promise<City[]> {
   }
 
   const data = await parseJson<GeocodingResponse>(response);
+
+  if (!isObject(data) || (data.results !== undefined && !Array.isArray(data.results))) {
+    throw new WeatherServiceError('Resposta inválida do serviço de localização.');
+  }
 
   return (data.results ?? []).filter(isValidGeocodingResult).map((result) => ({
     id: result.id,
@@ -166,6 +179,10 @@ export async function getWeather(city: City): Promise<WeatherData> {
   }
 
   const data = await parseJson<ForecastResponse>(response);
+  if (!isObject(data)) {
+    throw new WeatherServiceError('Resposta inválida do serviço de clima.');
+  }
+
   const current = data.current;
   const daily = data.daily;
 
