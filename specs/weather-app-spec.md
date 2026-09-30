@@ -6,39 +6,69 @@ A aplicação utilizará a API Open-Meteo como fonte de dados, sem autenticaçã
 
 O objetivo do produto é permitir que o usuário responda rapidamente a perguntas como “qual é o clima agora?” e “qual será a previsão para os próximos dias?”, sem exigir cadastro, navegação complexa ou conhecimento técnico.
 
+## Escopo e contrato de dados
+
+- O fluxo principal é: submeter cidade, selecionar uma localidade quando houver múltiplas correspondências e consultar clima atual e previsão. A busca só é enviada após Enter ou acionamento de Buscar, não a cada tecla.
+- O geocoding usa a Open-Meteo Geocoding API com `count=5`. Antes do envio, a consulta deve ser removida de espaços nas extremidades, normalizada em Unicode NFC e codificada como parâmetro de URL. Após remover espaços, consultas com menos de dois pontos de código Unicode são rejeitadas localmente; a ordem dos resultados da API é preservada.
+- Cada resultado de geocoding deve fornecer nome não vazio e coordenadas numéricas finitas dentro dos limites latitude `[-90, 90]` e longitude `[-180, 180]`. Descartar resultados inválidos; se a resposta não vazia não contiver nenhum resultado válido, apresentar erro de resposta inválida, não estado vazio. Exibir também `admin1` e país quando disponíveis. Clima só pode ser solicitado após a seleção automática de resultado único ou escolha explícita entre múltiplos resultados.
+- O clima usa a Open-Meteo Forecast API, consultada por latitude e longitude, nunca pelo texto digitado. Solicitar `current=temperature_2m,weather_code`, `daily=temperature_2m_min,temperature_2m_max,weather_code`, `forecast_days=5`, `timezone=auto` e `temperature_unit=celsius`.
+- A resposta de previsão deve incluir `timezone` válido como identificador IANA, `current.time` ISO 8601 e `daily.time` como array de datas ISO. Temperaturas devem ser números finitos; códigos meteorológicos devem ser inteiros. Arrays diários são associados pela mesma posição em `daily.time`; arrays com comprimentos diferentes são tratados como dados parciais.
+- `current.time` e `daily.time` são horários/datas locais da localidade. Os campos de cada resposta devem ser validados antes de serem apresentados. Sem `timezone` válido ou `daily.time` utilizável, somente a seção de previsão falha; sem `current.time`, exibir os dados atuais válidos sem o horário de observação.
+- O produto não deve fazer polling nem retentativas automáticas. Uma nova chamada ocorre por nova busca, seleção de resultado ou acionamento explícito de tentar novamente.
+
+### Descrições de condição meteorológica
+
+O campo Open-Meteo `weather_code` deve ser convertido para uma descrição em português do Brasil. Usar os grupos WMO abaixo; código fora da tabela deve resultar em “Condição indisponível”.
+
+| Códigos | Descrição |
+| --- | --- |
+| 0 | Céu limpo |
+| 1 | Predominantemente limpo |
+| 2 | Parcialmente nublado |
+| 3 | Encoberto |
+| 45, 48 | Neblina |
+| 51, 53, 55 | Garoa |
+| 56, 57 | Garoa congelante |
+| 61, 63, 65 | Chuva |
+| 66, 67 | Chuva congelante |
+| 71, 73, 75, 77 | Neve |
+| 80, 81, 82 | Pancadas de chuva |
+| 85, 86 | Pancadas de neve |
+| 95, 96, 99 | Trovoada |
+
 ## Functional Requirements
 
-### 1. Search city by name
+### FR-01 — Buscar e selecionar localidade
 - O sistema deve permitir que o usuário insira o nome de uma cidade e execute a busca.
-- A busca aceita nomes de cidades e localidades retornadas pelo serviço de geocoding; não aceita pontos de interesse como aeroportos ou bairros como categoria de busca dedicada.
-- Cada resultado deve identificar a localidade por nome, região administrativa quando disponível e país. Se houver mais de um resultado, o usuário deve escolher um antes de carregar o clima; se houver exatamente um, ele deve ser selecionado automaticamente.
+- A busca aceita cidades e localidades retornadas pelo geocoding; não oferece busca dedicada por pontos de interesse.
+- Resultados múltiplos devem permitir seleção por teclado e toque. Um único resultado é selecionado automaticamente.
 - Critérios de aceitação:
-  - Given um nome de cidade válido, when o usuário pressionar Enter ou acionar Buscar, then o sistema deve iniciar o geocoding e exibir o estado de carregamento.
-  - Given o geocoding retornar mais de uma localidade, when os resultados forem exibidos, then cada opção deve mostrar nome, região disponível e país e o sistema só deve carregar o clima após a escolha do usuário.
+  - Given uma consulta com pelo menos dois pontos de código Unicode, when o usuário pressionar Enter ou acionar Buscar, then o sistema deve iniciar o geocoding e exibir o estado de carregamento.
+  - Given mais de uma localidade retornada, when os resultados forem exibidos, then devem aparecer no máximo cinco opções, na ordem da API, identificadas por nome, região e país quando disponíveis; nenhuma chamada meteorológica deve ocorrer antes da seleção.
   - Given o geocoding retornar exatamente uma localidade, when a resposta for recebida, then o sistema deve selecioná-la e carregar o clima e a previsão.
   - Given o geocoding retornar uma lista vazia, when a resposta for recebida com sucesso, then o sistema deve exibir “Nenhuma cidade encontrada” e não solicitar dados meteorológicos.
 
-### 2. Display current weather
+### FR-02 — Exibir clima atual
 - O sistema deve exibir o clima atual da cidade selecionada.
 - A tela deve incluir temperatura atual e condição climática, usando os campos de temperatura atual e código de condição meteorológica retornados pela Open-Meteo.
-- A localidade selecionada deve ser exibida junto aos dados para que o usuário possa confirmar qual cidade está consultando.
+- A localidade selecionada deve ser exibida junto aos dados. Exibir também o horário de observação recebido em `current.time`, formatado no fuso da localidade.
 - Critérios de aceitação:
-  - Given temperatura e código de condição válidos, when a resposta for processada, then o sistema deve exibir a temperatura arredondada para o inteiro mais próximo, a unidade ativa e a descrição da condição em português.
+  - Given temperatura e código de condição válidos, when a resposta for processada, then o sistema deve exibir temperatura, unidade ativa, descrição mapeada e horário local da observação.
   - Given que a temperatura esteja ausente ou inválida, when os dados forem processados, then o sistema deve exibir “Clima atual indisponível” no lugar do valor e não mostrar temperatura de uma busca anterior.
-  - Given que apenas o código de condição esteja ausente ou inválido, when os dados forem processados, then o sistema deve exibir a temperatura válida e “Condição indisponível” para a descrição.
+  - Given que o código de condição esteja ausente, inválido ou não mapeado, when os dados forem processados, then o sistema deve exibir a temperatura válida e “Condição indisponível” para a descrição.
 
-### 3. Display 5-day forecast
+### FR-03 — Exibir previsão de cinco dias
 - O sistema deve mostrar cinco datas consecutivas: a data atual e as quatro seguintes, calculadas no fuso horário da localidade selecionada.
 - Cada data deve apresentar temperatura mínima e máxima e uma descrição da condição climática. As temperaturas devem usar a unidade ativa.
 - Critérios de aceitação:
-  - Given dados diários válidos, when a previsão for processada, then o sistema deve exibir exatamente cinco posições em ordem cronológica, começando pela data local atual.
+  - Given dados diários válidos, when a previsão for processada, then o sistema deve exibir exatamente cinco datas locais consecutivas em ordem cronológica, com dia da semana e data no formato `dd/MM`.
   - Given a resposta conter datas anteriores ou mais de cinco datas, when os dados forem processados, then o sistema deve exibir somente a data local atual e as quatro datas seguintes.
-  - Given que um dia ou um de seus campos esteja ausente ou inválido, when a previsão for exibida, then a posição daquele dia deve permanecer e identificar como indisponíveis somente os campos ausentes.
+  - Given um campo diário ausente ou inválido, when a previsão for exibida, then a posição daquele dia deve permanecer e somente o campo afetado deve aparecer como indisponível.
   - Given que a chamada da previsão falhe, when a resposta retornar erro ou timeout, then o sistema deve manter a seção de clima atual se ela tiver sido carregada e mostrar erro e opção de nova tentativa na seção de previsão.
 
-### 4. Toggle temperature unit
+### FR-04 — Alternar unidade de temperatura
 - O usuário deve poder alternar entre Celsius e Fahrenheit.
-- A conversão deve usar os valores numéricos de origem, sem converter valores já arredondados. Exibir temperaturas arredondadas para o inteiro mais próximo e indicar `°C` ou `°F` junto aos valores.
+- A conversão deve usar os valores Celsius recebidos, sem converter valores já arredondados. Exibir temperaturas arredondadas para o inteiro mais próximo, com empates afastados de zero, e indicar `°C` ou `°F` junto aos valores.
 - A conversão de Celsius para Fahrenheit deve usar $F = (C \times 9/5) + 32$; a conversão inversa deve usar $C = (F - 32) \times 5/9$.
 - Critérios de aceitação:
   - Given que o usuário abra a aplicação sem uma unidade previamente selecionada, when os dados de temperatura forem exibidos, then a unidade ativa deve ser Celsius (`°C`).
@@ -46,14 +76,15 @@ O objetivo do produto é permitir que o usuário responda rapidamente a pergunta
   - Given valores meteorológicos carregados, when o usuário selecionar Celsius, then temperatura atual, mínima e máxima devem ser convertidas a partir dos valores de origem, arredondadas e identificadas com `°C`.
   - Given a unidade for alterada durante uma requisição, when os dados forem recebidos, then todos os valores devem ser exibidos na unidade que estiver ativa naquele momento.
 
-### 5. Loading, empty and error states
+### FR-05 — Estados de carregamento, vazio e erro
 - O sistema deve informar ao usuário quando a busca está em andamento, quando não há resultados e quando a requisição falhou.
 - Critérios de aceitação:
   - Given uma requisição em andamento, when o usuário a iniciar, then o sistema deve exibir um indicador de carregamento e desabilitar apenas o controle que iniciou aquela operação.
-  - Given uma falha de rede, erro HTTP, resposta inválida ou timeout, when a operação terminar, then o sistema deve encerrar o carregamento, exibir uma mensagem em português que identifique a operação que falhou e disponibilizar uma ação para tentar novamente.
+  - Given uma falha de geocoding, when a operação terminar, then o sistema deve exibir “Não foi possível buscar cidades. Tente novamente.”; falha no clima atual deve exibir “Não foi possível carregar o clima atual. Tente novamente.”; falha na previsão deve exibir “Não foi possível carregar a previsão. Tente novamente.”
+  - Given uma falha de rede, erro HTTP, resposta inválida ou timeout, when a operação terminar, then o sistema deve encerrar o carregamento, anunciar o erro e disponibilizar nova tentativa manual para a operação afetada.
   - Given uma nova busca, when ela terminar sem resultados, then o sistema deve mostrar “Nenhuma cidade encontrada”; erros técnicos não devem ser apresentados como ausência de resultados.
 
-### 6. Support mobile usage
+### FR-06 — Usabilidade responsiva
 - A interface deve ser utilizável em dispositivos móveis e adaptar-se a telas menores.
 - Critérios de aceitação:
   - Given viewports de 320, 375, 768 e 1280 CSS pixels de largura, when a tela for carregada, then não deve haver rolagem horizontal nem conteúdo cortado.
@@ -62,138 +93,79 @@ O objetivo do produto é permitir que o usuário responda rapidamente a pergunta
 
 ## User Stories
 
-1. Como Maria, usuária casual em trânsito, quero buscar uma cidade rapidamente para saber se preciso levar guarda-chuva ou uma camada extra antes de sair de casa.
-2. Como Lucas, usuário prático com rotina de viagem, quero consultar a previsão dos próximos 5 dias para planejar deslocamentos, compromissos e itens que devo levar.
-3. Como Ana, usuária orientada a planejamento, quero visualizar a previsão de 5 dias para organizar melhor trabalho, rotina e atividades externas.
-4. Como Maria, usuária casual em trânsito, quero ver o clima atual da cidade selecionada para decidir rapidamente o que vestir no momento.
-5. Como Lucas, usuário prático com rotina de viagem, quero alternar entre Celsius e Fahrenheit para comparar temperaturas conforme minha preferência e contexto de viagem.
-6. Como Ana, usuária orientada a planejamento, quero receber feedback claro em carregamento, erro e ausência de resultados para confiar na aplicação ao consultar a previsão.
-7. Como Maria, usuária casual em trânsito, quero uma interface legível e simples no celular para consultar o clima sem esforço em poucos segundos.
-8. Como Lucas, usuário prático com rotina de viagem, quero que a previsão de 5 dias seja fácil de ler em mobile e desktop para tomar decisões rápidas em diferentes contextos de uso.
-
-> Cada story acima está conectada aos requisitos funcionais de busca, clima atual, previsão de 5 dias, unidade de temperatura e estados de carregamento/erro.
+1. Como Maria, quero consultar o clima atual e os próximos cinco dias de uma cidade para decidir o que vestir e levar.
+2. Como Lucas, quero distinguir cidades com nomes iguais e consultar a localidade correta durante uma viagem.
+3. Como Ana, quero alternar entre Celsius e Fahrenheit para interpretar temperaturas conforme minha preferência.
+4. Como pessoa usuária de celular, quero buscar e consultar o clima sem rolagem horizontal e receber feedback claro quando a consulta falhar.
 
 ## Rastreabilidade das User Stories
 
 Os critérios de aceite canônicos estão nos requisitos funcionais e em Edge Cases; as histórias abaixo apontam para esses critérios para evitar duplicação.
 
-- Story 1: requisitos funcionais 1, 2 e 3.
-- Story 4: requisito funcional 2.
-- Stories 2 e 3: requisito funcional 3.
-- Story 5: requisito funcional 4.
-- Story 6: requisito funcional 5 e Edge Cases 4 e 5.
-- Story 7: requisito funcional 6.
-- Story 8: requisitos funcionais 3 e 6.
+- Story 1: FR-01, FR-02 e FR-03.
+- Story 2: FR-01.
+- Story 3: FR-04.
+- Story 4: FR-05 e FR-06.
 
 ## Non-Functional Requirements
 
 ### 1. Performance
-- Ao iniciar uma busca ou nova tentativa, a interface deve apresentar feedback em até 100 ms.
-- Após a resposta bem-sucedida da API, a interface deve renderizar os dados em até 1 segundo.
-- Requisições individuais à API devem expirar após 10 segundos; a interface deve permanecer interativa durante a espera.
+- Após Enter, seleção ou acionamento de nova tentativa, a interface deve apresentar feedback de carregamento em até 100 ms.
+- Depois de receber a última resposta necessária com sucesso, a interface deve renderizar os dados daquela operação em até 1 segundo.
+- Cada requisição externa deve ser abortada após 10 segundos; o limite é medido por requisição, não pelo fluxo completo.
+- Enquanto houver requisição, controles não relacionados a ela devem continuar operáveis.
 
 ### 2. Accessibility
 - A aplicação deve atender WCAG 2.2 nível AA, incluindo contraste mínimo de 4,5:1 para texto comum e 3:1 para texto grande e componentes gráficos relevantes.
-- Busca, resultados, seletor de unidade e novas tentativas devem ser operáveis por teclado, ter rótulos acessíveis e foco visível.
-- Estados de carregamento, erro e ausência de resultados devem ser anunciados por tecnologia assistiva sem exigir que o usuário procure a mensagem visualmente.
+- Busca, resultados, seletor de unidade e novas tentativas devem ser operáveis por teclado, possuir nome acessível e foco visível; a navegação não pode criar armadilha de teclado.
+- Carregamento e resultados devem ser anunciados por uma região com papel `status`; erros devem ser anunciados por uma região com papel `alert`.
+- A verificação automatizada de acessibilidade não deve encontrar violações críticas ou graves; a validação manual de teclado e leitor de tela continua obrigatória.
 
 ### 3. Responsiveness
 - A interface deve funcionar em larguras de 320 a 1280 CSS pixels, sem rolagem horizontal ou sobreposição de conteúdo.
 - Controles interativos devem ter área de toque mínima de 44 por 44 CSS pixels.
+- A validação visual deve cobrir 320, 375, 768 e 1280 CSS pixels de largura, em orientação retrato e paisagem quando aplicável.
 
-### 4. Availability and resilience
-- A aplicação deve lidar com latência ou falha da API sem travar ou quebrar a experiência do usuário.
-- Em caso de indisponibilidade do serviço, o sistema deve mostrar uma mensagem clara e manter a interface estável.
+### 4. Compatibilidade
+- A aplicação deve funcionar nas duas versões estáveis mais recentes de Chrome, Edge, Firefox e Safari, incluindo Safari em iOS e Chrome em Android.
+- O layout e o fluxo de busca devem ser testados ao menos em Chromium desktop e em Safari ou Chromium mobile.
 
-### 5. Localization
+### 5. Availability and resilience
+- Falha no geocoding, clima atual ou previsão deve ser isolada à operação/seção afetada; dados já carregados para a mesma localidade permanecem visíveis e identificados.
+- Retentativas são iniciadas pelo usuário. Para HTTP 429, não reenviar automaticamente; se `Retry-After` estiver presente, desabilitar a retentativa até o prazo informado e comunicá-lo ao usuário.
+
+### 6. Localization
 - A interface deve estar em português do Brasil.
 - Mensagens e descrições das condições meteorológicas devem estar em português do Brasil; códigos meteorológicos da API não devem ser exibidos diretamente.
-- Datas devem usar o fuso horário da localidade consultada e o formato `dd/mm`; números decimais devem usar vírgula.
+- Datas devem usar o fuso horário da localidade consultada e o formato de dia da semana abreviado e `dd/MM`; números decimais devem usar vírgula.
 
-### 6. Security and privacy
+### 7. Security and privacy
 - O usuário não precisa autenticar-se para usar o fluxo principal da aplicação.
-- O sistema não deve persistir dados de usuário no servidor no escopo do MVP.
+- Consultas de cidade e coordenadas selecionadas são enviadas à Open-Meteo por HTTPS; não enviar outros dados pessoais.
+- A aplicação não deve persistir consultas, coordenadas ou preferências em servidor, armazenamento local ou cookies no MVP.
 
 ## Edge Cases
 
-1. Cidade inexistente ou geocoding sem resultados
-- Dado que o geocoding responda com sucesso e sem correspondências, quando o usuário submeter a busca, então o sistema deve exibir “Nenhuma cidade encontrada”, não apresentar os dados da busca anterior como resultado atual e permitir nova busca.
+1. Busca vazia, só com espaços ou menor que dois caracteres: impedir a requisição, exibir “Digite o nome de uma cidade” para entrada vazia ou “Digite pelo menos 2 caracteres” para consulta curta e manter o foco no campo.
+2. Caracteres de entrada: preservar acentos, hífens, apóstrofos e Unicode válido; rejeitar caracteres de controle sem enviar a requisição. Consulta sem correspondência é estado vazio, não erro de validação.
+3. Geocoding sem resultados: exibir “Nenhuma cidade encontrada”, não disparar chamadas meteorológicas e não rotular dados anteriores como resultado novo.
+4. API offline, HTTP 4xx/5xx, JSON inválido ou resposta sem estrutura obrigatória: encerrar o carregamento e exibir a mensagem de erro correspondente à operação. Distinguir falha técnica de geocoding bem-sucedido sem resultados; em 429, não retentar automaticamente e, se houver `Retry-After`, manter a ação de tentar novamente desabilitada até o prazo.
+5. Timeout: ao completar 10 segundos por requisição, abortá-la, encerrar o carregamento e exibir “A consulta excedeu o tempo limite. Tente novamente.” com ação manual de nova tentativa. Uma requisição cancelada por busca mais recente não deve exibir mensagem de timeout.
+6. Resposta parcial: temperatura atual ausente torna apenas o valor atual indisponível; código de condição ausente/desconhecido torna apenas a descrição indisponível. Previsão incompleta mantém cinco datas e marca individualmente cada campo ausente.
+7. Falha de uma das chamadas de clima: manter visível a seção carregada com sucesso e permitir tentar novamente somente a seção com falha.
+8. Buscas fora de ordem: somente a resposta da busca mais recente pode atualizar resultados e clima; respostas anteriores devem ser ignoradas ou canceladas.
+9. Troca de unidade durante carregamento: aplicar a unidade ativa no momento da renderização, convertendo os valores Celsius de origem sem arredondamento intermediário.
+10. Geocoding malformado: descartar resultados sem nome ou com coordenadas inválidas; se todos os resultados forem inválidos, exibir erro de resposta inválida e não iniciar chamadas meteorológicas.
 
-2. Input vazio ou composto apenas por espaços
-- Dado que o campo esteja vazio ou contenha apenas espaços em branco, quando o usuário tentar buscar, então o sistema deve impedir qualquer requisição, exibir “Digite o nome de uma cidade” e manter o foco no campo para correção.
+## Dependências e limites operacionais
 
-3. Caracteres especiais
-- Dado que o nome contenha acentos, cedilha, hífen, apóstrofo ou caracteres Unicode válidos, quando o usuário buscar, então o sistema deve preservar e codificar corretamente a consulta.
-- Dado que a entrada contenha caracteres de controle, quando o usuário tentar buscar, então o sistema deve rejeitá-la sem enviar a requisição e exibir uma mensagem de validação. Pontuação ou escrita não reconhecida pelo geocoding deve resultar no estado “Nenhuma cidade encontrada”, não em erro de validação.
-
-4. Falha de API ou de conectividade
-- Dado que uma requisição falhe por erro HTTP, resposta inválida ou falta de conexão, quando o sistema tentar carregar geocoding ou dados meteorológicos, então deve exibir uma mensagem de erro compreensível, encerrar o estado de carregamento e disponibilizar nova tentativa para a operação que falhou.
-- Uma falha técnica não deve ser apresentada como “cidade não encontrada”.
-- Se clima atual ou previsão carregar com sucesso enquanto a outra operação falhar, a seção bem-sucedida deve permanecer visível e a seção com falha deve informar o erro e permitir nova tentativa independente.
-
-5. Timeout
-- Dado que uma requisição individual exceda 10 segundos, quando o prazo for atingido, então o sistema deve abortar a requisição, encerrar seu indicador de carregamento e exibir “A consulta demorou demais. Tente novamente.” com ação de nova tentativa.
-
-6. Resposta parcial
-- Dado que a resposta meteorológica esteja incompleta, quando houver campos ausentes ou inválidos, então o sistema deve exibir os campos válidos e identificar os indisponíveis, sem inventar valores.
-- Se faltar a temperatura atual, o painel deve indicar “Clima atual indisponível”; se faltar apenas a condição, deve exibir a temperatura e “Condição indisponível”. Para a previsão, o sistema deve manter as cinco datas e marcar individualmente os campos ausentes como indisponíveis.
-
-7. Troca de unidade durante carregamento
-- Se o usuário trocar de unidade enquanto a resposta estiver sendo carregada, o sistema deve preservar a unidade selecionada e apresentar todos os valores recebidos nessa unidade quando a renderização terminar.
-
-8. Buscas consecutivas
-- Dado que o usuário inicie uma nova busca antes de a anterior terminar, quando as respostas chegarem fora de ordem, então somente os resultados da busca mais recente podem atualizar a interface.
-
-## Assumptions
-
-1. A aplicação é uma solução web front-end, sem banco de dados e sem persistência de servidor.
-2. A fonte de dados será a Open-Meteo, sem necessidade de API key.
-3. A previsão contém cinco datas locais consecutivas, começando pela data atual da localidade consultada.
-4. Celsius será a unidade padrão e Fahrenheit será uma opção de conversão do usuário.
-5. O produto prioriza uso em mobile, mas deve continuar funcional em telas maiores.
-6. O escopo do produto é de consulta informacional rápida, sem recursos avançados de alertas, histórico ou comparação complexa.
-
-## Risks
-
-1. Dependência da API externa
-- Se a API de clima tiver latência alta ou indisponibilidade, a experiência do usuário pode ser afetada diretamente.
-
-2. Respostas incompletas da API
-- Campos ausentes ou inconsistentes podem resultar em dados incorretos ou interface quebrada.
-
-3. Experiência mobile inadequada
-- Falhas de responsividade podem causar baixa adoção, principalmente em celulares.
-
-4. Acessibilidade insuficiente
-- Falhas de contraste, foco ou semântica podem dificultar o uso e reduzir o alcance do produto.
-
-5. Ambiguidade na busca por cidade
-- Cidades homônimas ainda podem ser confundidas se os dados de região ou país forem insuficientes; a lista de resultados deve mostrar essas informações sempre que a API as fornecer.
+- A disponibilidade e os dados meteorológicos dependem da Open-Meteo; o produto não promete funcionamento offline nem disponibilidade independente do provedor.
+- Não há cache persistente nem atualização automática. Em falhas, os dados carregados para a mesma localidade permanecem identificados na tela e o usuário pode solicitar nova tentativa.
+- Se o geocoding não fornecer região ou país, a interface exibe somente os campos disponíveis; a desambiguação não pode inventar esses dados.
 
 ## Out of Scope
 
-1. Autenticação e cadastro de usuários.
-2. Persistência de dados no servidor.
-3. Histórico de consultas ou favoritos.
-4. Alertas severos ou notificação push.
-5. Dados climáticos históricos complexos.
-6. Mapas interativos ou radar meteorológico.
-7. Suporte multilíngue além do PT-BR.
-8. Funcionalidade offline completa, além de tratamento de erro degradado.
-9. Geolocalização automática; no MVP, o usuário seleciona manualmente a localidade.
-
-## Open Questions
-
-1. Em versões futuras, haverá necessidade de favoritos, histórico de consultas ou comparação entre localidades?
-
-## Decision Log
-
-- Fonte de dados: Open-Meteo (sem API key).
-- Definição de previsão: cinco datas locais consecutivas, começando pela data atual no fuso da localidade selecionada.
-- Seleção de localidade: selecionar automaticamente um único resultado de geocoding; exigir escolha explícita quando houver múltiplos resultados.
-- Unidade padrão: Celsius.
-- Conversão e apresentação de temperatura: conversão a partir dos valores de origem, arredondamento para o inteiro mais próximo e indicação da unidade.
-- Timeout por requisição: 10 segundos.
-- Acessibilidade: WCAG 2.2 nível AA.
-- Sem autenticação e sem persistência no servidor no MVP.
-- Idioma da UI: pt-BR.
+1. Cadastro, autenticação, favoritos, histórico e persistência de consultas ou preferências.
+2. Geolocalização automática, pontos de interesse, bairros e busca por aeroportos.
+3. Alertas, notificações push, dados históricos, mapas, radar e comparação de localidades.
+4. Funcionamento offline, atualização automática e idiomas diferentes de pt-BR.
